@@ -159,7 +159,7 @@ RCT_EXPORT_MODULE();
     UIGraphicsImageRendererFormat *renderFormat = [UIGraphicsImageRendererFormat defaultFormat];
     renderFormat.opaque = NO;
     UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:size format:renderFormat];
-    
+
     UIImage *resizedImage = [renderer imageWithActions:^(UIGraphicsImageRendererContext * _Nonnull rendererContext) {
         [image drawInRect:CGRectMake(0, 0, size.width, size.height)];
     }];
@@ -168,7 +168,7 @@ RCT_EXPORT_MODULE();
 
 - (void)updateItemImageWithURL:(CPListItem *)item imgUrl:(NSString *)imgUrlString {
     NSURL *imgUrl = [NSURL URLWithString:imgUrlString];
-    
+
     NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithURL:imgUrl completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         if (data) {
             UIImage *image = [UIImage imageWithData:data];
@@ -182,25 +182,25 @@ RCT_EXPORT_MODULE();
     [task resume];
 }
 
-- (void)updateListRowItemImageWithURL:(CPListImageRowItem *)item imgUrl:(NSString *)imgUrlString index:(int)index {    
+- (void)updateListRowItemImageWithURL:(CPListImageRowItem *)item imgUrl:(NSString *)imgUrlString index:(int)index {
     NSURL *imgUrl = [NSURL URLWithString:imgUrlString];
-    
+
     NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithURL:imgUrl completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         if (data) {
             UIImage *image = [UIImage imageWithData:data];
-            
+
             dispatch_async(dispatch_get_main_queue(), ^{
                 NSMutableArray* newImages = [item.gridImages mutableCopy];
-                
+
                 @try {
                     newImages[index] = image;
                 }
                 @catch (NSException *exception) {
                     // Best effort updating the array
                     NSLog(@"Failed to update images array of CPListImageRowItem");
-                }                
-                
-                [item updateImages:newImages];                
+                }
+
+                [item updateImages:newImages];
             });
         } else {
             NSLog(@"Failed to load image for CPListImageRowItem from URL: %@", imgUrl);
@@ -225,7 +225,7 @@ RCT_EXPORT_METHOD(createTemplate:(NSString *)templateId config:(NSDictionary*)co
     NSString *title = [RCTConvert NSString:config[@"title"]];
     NSArray *leadingNavigationBarButtons = [self parseBarButtons:[RCTConvert NSArray:config[@"leadingNavigationBarButtons"]] templateId:templateId];
     NSArray *trailingNavigationBarButtons = [self parseBarButtons:[RCTConvert NSArray:config[@"trailingNavigationBarButtons"]] templateId:templateId];
-    
+
     // Create a new CPTemplate object
     CPTemplate *carPlayTemplate = [[CPTemplate alloc] init];
 
@@ -304,7 +304,7 @@ RCT_EXPORT_METHOD(createTemplate:(NSString *)templateId config:(NSDictionary*)co
         [nowPlayingTemplate setUpNextButtonEnabled:[RCTConvert BOOL:config[@"upNextButtonEnabled"]]];
         NSMutableArray<CPNowPlayingButton *> *buttons = [NSMutableArray new];
         NSArray<NSDictionary*> *_buttons = [RCTConvert NSDictionaryArray:config[@"buttons"]];
-        
+
         NSDictionary *buttonTypeMapping = @{
             @"shuffle": CPNowPlayingShuffleButton.class,
             @"add-to-library": CPNowPlayingAddToLibraryButton.class,
@@ -313,14 +313,14 @@ RCT_EXPORT_METHOD(createTemplate:(NSString *)templateId config:(NSDictionary*)co
             @"repeat": CPNowPlayingRepeatButton.class,
             @"image": CPNowPlayingImageButton.class
         };
-        
+
         for (NSDictionary *_button in _buttons) {
             NSString *buttonType = [RCTConvert NSString:_button[@"type"]];
             NSDictionary *body = @{@"templateId":templateId, @"id": _button[@"id"] };
             Class buttonClass = buttonTypeMapping[buttonType];
             if (buttonClass) {
                 CPNowPlayingButton *button;
-                
+
                 if ([buttonType isEqualToString:@"image"]) {
                     UIImage *_image = [RCTConvert UIImage:[_button objectForKey:@"image"]];
                     button = [[CPNowPlayingImageButton alloc] initWithImage:_image handler:^(__kindof CPNowPlayingImageButton * _Nonnull) {
@@ -335,7 +335,7 @@ RCT_EXPORT_METHOD(createTemplate:(NSString *)templateId config:(NSDictionary*)co
                         }
                     }];
                 }
-                
+
                 [buttons addObject:button];
             }
         }
@@ -744,7 +744,7 @@ RCT_EXPORT_METHOD(getMaximumListItemImageSize:(NSString *)templateId
             @"width": @(CPListItem.maximumImageSize.width),
             @"height": @(CPListItem.maximumImageSize.height)
         };
-        resolve(sizeDict);        
+        resolve(sizeDict);
     } else {
         NSLog(@"Failed to find template %@", template);
         reject(@"template_not_found", @"Template not found in store", nil);
@@ -790,7 +790,7 @@ RCT_EXPORT_METHOD(getMaximumListImageRowItemImageSize:(NSString *)templateId
             @"width": @(CPListImageRowItem.maximumImageSize.width),
             @"height": @(CPListImageRowItem.maximumImageSize.height)
         };
-        resolve(sizeDict);    
+        resolve(sizeDict);
     } else {
         NSLog(@"Failed to find template %@", template);
         reject(@"template_not_found", @"Template not found in store", nil);
@@ -939,7 +939,7 @@ RCT_EXPORT_METHOD(updateMapTemplateMapButtons:(NSString*) templateId mapButtons:
     else {
       [mapTemplate setGuidanceBackgroundColor:UIColor.systemGray5Color];
     }
-    
+
     if ([config objectForKey:@"tripEstimateStyle"]) {
         [mapTemplate setTripEstimateStyle:[RCTConvert CPTripEstimateStyle:config[@"tripEstimateStyle"]]];
     }
@@ -951,7 +951,7 @@ RCT_EXPORT_METHOD(updateMapTemplateMapButtons:(NSString*) templateId mapButtons:
         NSArray *leadingNavigationBarButtons = [self parseBarButtons:[RCTConvert NSArray:config[@"leadingNavigationBarButtons"]] templateId:templateId];
         [mapTemplate setLeadingNavigationBarButtons:leadingNavigationBarButtons];
     }
-  
+
     if ([config objectForKey:@"trailingNavigationBarButtons"]){
         NSArray *trailingNavigationBarButtons = [self parseBarButtons:[RCTConvert NSArray:config[@"trailingNavigationBarButtons"]] templateId:templateId];
         [mapTemplate setTrailingNavigationBarButtons:trailingNavigationBarButtons];
@@ -1084,10 +1084,10 @@ RCT_EXPORT_METHOD(updateMapTemplateMapButtons:(NSString*) templateId mapButtons:
         NSString *_detailText = [item objectForKey:@"detailText"];
         NSString *_text = [item objectForKey:@"text"];
         NSObject *_imageObj = [item objectForKey:@"image"];
-        
+
         NSArray *_imageItems = [item objectForKey:@"images"];
         NSArray *_imageUrls = [item objectForKey:@"imgUrls"];
-        
+
         if (_imageItems == nil && _imageUrls == nil) {
             UIImage *_image = [RCTConvert UIImage:_imageObj];
             CPListItem *_item;
@@ -1109,7 +1109,7 @@ RCT_EXPORT_METHOD(updateMapTemplateMapButtons:(NSString*) templateId mapButtons:
         } else {
             // parse images
             NSMutableArray * _images = [NSMutableArray array];
-            
+
             if (_imageItems != nil) {
                 NSArray* slicedArray = [_imageItems subarrayWithRange:NSMakeRange(0, MIN(CPMaximumNumberOfGridImages, _imageItems.count))];
 
@@ -1119,7 +1119,7 @@ RCT_EXPORT_METHOD(updateMapTemplateMapButtons:(NSString*) templateId mapButtons:
                 }
             }
             if (@available(iOS 14.0, *)) {
-                
+
                 CPListImageRowItem *_item;
                 if (_images.count > 0)
                 {
@@ -1129,22 +1129,22 @@ RCT_EXPORT_METHOD(updateMapTemplateMapButtons:(NSString*) templateId mapButtons:
                 {
                     // Show only as much images as allowed.
                     NSArray* _slicedArray = [_imageUrls subarrayWithRange:NSMakeRange(0, MIN(CPMaximumNumberOfGridImages, _imageUrls.count))];//
-                    
+
                     // create array with empty UI images, that will be replaced later
                     NSMutableArray *_imagesArray = [NSMutableArray arrayWithCapacity:_slicedArray.count];
                     for (NSUInteger i = 0; i < _slicedArray.count; i++) {
                         [_imagesArray addObject:[[UIImage alloc] init]];
                     }
                     _item = [[CPListImageRowItem alloc] initWithText:_text images:_imagesArray];
-                    
-                    
+
+
                     int _index = 0;
                     for (NSString* imgUrl in _slicedArray) {
                         [self updateListRowItemImageWithURL:_item imgUrl:imgUrl index:_index];
                         _index++;
                     }
                 }
-                
+
                 [_item setListImageRowHandler:^(CPListImageRowItem * _Nonnull item, NSInteger index, dispatch_block_t  _Nonnull completionBlock) {
                     // Find the current template
                     RNCPStore *store = [RNCPStore sharedManager];
@@ -1153,11 +1153,11 @@ RCT_EXPORT_METHOD(updateMapTemplateMapButtons:(NSString*) templateId mapButtons:
                         [self sendTemplateEventWithName:template name:@"didSelectListItemRowImage" json:@{ @"index": @(listIndex), @"imageIndex": @(index)}];
                     }
                 }];
-                    
+
                 [_item setUserInfo:@{ @"index": @(listIndex) }];
                 [_items addObject:_item];
             }
-            
+
         }
         listIndex = listIndex + 1;
     }
@@ -1170,7 +1170,7 @@ RCT_EXPORT_METHOD(updateMapTemplateMapButtons:(NSString*) templateId mapButtons:
     for (NSDictionary *item in items) {
         [_items addObject:[[CPInformationItem alloc] initWithTitle:item[@"title"] detail:item[@"detail"]]];
     }
-    
+
     return _items;
 }
 
@@ -1184,7 +1184,7 @@ RCT_EXPORT_METHOD(updateMapTemplateMapButtons:(NSString*) templateId mapButtons:
         }];
         [_actions addObject:_action];
     }
-    
+
     return _actions;
 }
 
