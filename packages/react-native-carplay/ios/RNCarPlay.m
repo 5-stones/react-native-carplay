@@ -697,6 +697,41 @@ RCT_EXPORT_METHOD(updateListTemplateItem:(NSString *)templateId config:(NSDictio
     }
 }
 
+RCT_EXPORT_METHOD(updateListItemById:(NSString *)itemId config:(NSDictionary*)config) {
+    RNCPStore *store = [RNCPStore sharedManager];
+    NSArray<CPListItem *> *items = store.itemsStore[itemId];
+
+    if (items == nil || items.count == 0) {
+        NSLog(@"No items found for itemId %@", itemId);
+        return;
+    }
+
+    for (CPListItem *item in items) {
+        if (config[@"imgUrl"]) {
+            NSString *imgUrlString = [RCTConvert NSString:config[@"imgUrl"]];
+            [self updateItemImageWithURL:item imgUrl:imgUrlString];
+        }
+        if (config[@"image"]) {
+            [item setImage:[RCTConvert UIImage:config[@"image"]]];
+        }
+        if (config[@"text"]) {
+            [item setText:[RCTConvert NSString:config[@"text"]]];
+        }
+        if (config[@"detailText"]) {
+            [item setDetailText:[RCTConvert NSString:config[@"detailText"]]];
+        }
+        if (config[@"isPlaying"]) {
+            [item setPlaying:[RCTConvert BOOL:config[@"isPlaying"]]];
+        }
+        if (@available(iOS 14.0, *) && config[@"playbackProgress"]) {
+            [item setPlaybackProgress:[RCTConvert CGFloat:config[@"playbackProgress"]]];
+        }
+        if (@available(iOS 14.0, *) && config[@"accessoryImage"]) {
+            [item setAccessoryImage:[RCTConvert UIImage:config[@"accessoryImage"]]];
+        }
+    }
+}
+
 RCT_EXPORT_METHOD(updateInformationTemplateItems:(NSString *)templateId items:(NSArray*)items) {
     RNCPStore *store = [RNCPStore sharedManager];
     CPTemplate *template = [store findTemplateById:templateId];
