@@ -733,6 +733,26 @@ RCT_EXPORT_METHOD(getMaximumListItemCount:(NSString *)templateId
     }
 }
 
+RCT_EXPORT_METHOD(getTopTemplateId:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject) {
+    RNCPStore *store = [RNCPStore sharedManager];
+    CPInterfaceController *interfaceController = [store interfaceController];
+    CPTemplate *topTemplate = interfaceController.topTemplate;
+
+    if (!topTemplate) {
+        reject(@"no_top_template", @"No top template is currently visible", nil);
+        return;
+    }
+
+    NSString *templateId = topTemplate.userInfo[@"templateId"];
+    if (!templateId) {
+        reject(@"no_template_id", @"Top template does not have a templateId in userInfo", nil);
+        return;
+    }
+
+    resolve(templateId);
+}
+
 RCT_EXPORT_METHOD(getMaximumListItemImageSize:(NSString *)templateId
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {

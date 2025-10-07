@@ -83,6 +83,7 @@ export interface InternalCarPlay extends NativeModule {
   getMaximumListItemImageSize(id: string): Promise<ImageSize>;
   getMaximumNumberOfGridImages(id: string): Promise<number>;
   getMaximumListImageRowItemImageSize(id: string): Promise<ImageSize>;
+  getTopTemplateId(): Promise<string>;
   reactToSelectedResult(status: boolean): void;
   updateListTemplateSections(id: string, config: unknown): void;
   updateListTemplateItem(id: string, config: unknown): void;
@@ -279,11 +280,10 @@ export class CarPlayInterface {
   }
 
   /**
-   * The top-most template in the navigation hierarchy stack.
-   * @todo Not implemented yet
+   * The id of the top-most template in the navigation hierarchy stack.
    */
   public get topTemplate(): Promise<string> {
-    return Promise.resolve('');
+    return this.bridge.getTopTemplateId();
   }
 
   /**
