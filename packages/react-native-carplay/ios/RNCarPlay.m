@@ -1120,6 +1120,10 @@ RCT_EXPORT_METHOD(updateMapTemplateMapButtons:(NSString*) templateId mapButtons:
             if ([item objectForKey:@"isPlaying"]) {
                 [_item setPlaying:[RCTConvert BOOL:[item objectForKey:@"isPlaying"]]];
             }
+            if (@available(iOS 14.0, *) && [item objectForKey:@"playbackProgress"]) {
+                CGFloat _playbackProgress = [RCTConvert CGFloat:[item objectForKey:@"playbackProgress"]];
+                [_item setPlaybackProgress: _playbackProgress];
+            }
             if (item[@"imgUrl"]) {
                 NSString *imgUrlString = [RCTConvert NSString:item[@"imgUrl"]];
                 [self updateItemImageWithURL:_item imgUrl:imgUrlString];
