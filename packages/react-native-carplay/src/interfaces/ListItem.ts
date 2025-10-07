@@ -29,7 +29,7 @@ export interface ListItem {
   /**
    * Url for image displayed on the leading edge of the list item cell.
    */
-  imgUrl?: null;
+  imgUrl?: string;
   /**
    * Url for image displayed on the leading edge of the list item cell.
    * @namespace iOS
