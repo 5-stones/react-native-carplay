@@ -281,7 +281,6 @@ RCT_EXPORT_METHOD(createTemplate:(NSString *)templateId config:(NSDictionary*)co
                 listTemplate.emptyViewSubtitleVariants = [RCTConvert NSArray:config[@"emptyViewSubtitleVariants"]];
             }
         }
-        listTemplate.delegate = self;
         carPlayTemplate = listTemplate;
     }
     else if ([type isEqualToString:@"map"]) {
@@ -1142,6 +1141,17 @@ RCT_EXPORT_METHOD(updateMapTemplateMapButtons:(NSString*) templateId mapButtons:
 
         NSArray *_imageItems = [item objectForKey:@"images"];
         NSArray *_imageUrls = [item objectForKey:@"imgUrls"];
+        NSArray *_imageIds = [item objectForKey:@"imageIds"];
+
+        NSString *_itemId = [item objectForKey:@"id"];
+
+        if (_itemId == nil) {
+            _itemId = (id)[NSNull null];
+        }
+
+        if (_imageIds == nil) {
+            _imageIds = (id)[NSNull null];
+        }
 
         if (_imageItems == nil && _imageUrls == nil) {
             UIImage *_image = [RCTConvert UIImage:_imageObj];
@@ -1163,8 +1173,37 @@ RCT_EXPORT_METHOD(updateMapTemplateMapButtons:(NSString*) templateId mapButtons:
                 NSString *imgUrlString = [RCTConvert NSString:item[@"imgUrl"]];
                 [self updateItemImageWithURL:_item imgUrl:imgUrlString];
             }
-            [_item setUserInfo:@{ @"index": @(listIndex) }];
-            [_items addObject:_item];
+            [_item setUserInfo:@{
+              @"index": @(listIndex),
+              @"itemId": _itemId
+            }];
+
+            _item.handler = ^(CPListItem *selectedItem, void (^completionHandler)(void)) {
+                NSDictionary *payload = @{
+                  @"templateId": templateId,
+                  @"index": selectedItem.userInfo[@"index"],
+                  @"itemId": selectedItem.userInfo[@"itemId"]
+                };
+                if (self->hasListeners) {
+                  [self sendEventWithName:@"didSelectListItem" body:payload];
+                }
+                self.selectedResultBlock = completionHandler;
+            };
+            if (_itemId) {
+                RNCPStore *store = [RNCPStore sharedManager];
+                NSMutableArray *existing = store.itemsStore[_itemId];
+                if (existing == nil) {
+                    existing = [NSMutableArray array];
+                    store.itemsStore[_itemId] = existing;
+                }
+                [existing addObject:_item];
+            }
+
+            if (_item) {
+              [_items addObject:_item];
+            } else {
+              NSLog(@"The item was nil can't be created %@", item);
+            }
         } else {
             // parse images
             NSMutableArray * _images = [NSMutableArray array];
@@ -1204,17 +1243,68 @@ RCT_EXPORT_METHOD(updateMapTemplateMapButtons:(NSString*) templateId mapButtons:
                     }
                 }
 
+                [_item setUserInfo:@{
+                  @"index": @(listIndex),
+                  @"itemId": _itemId,
+                  @"imageIds": _imageIds
+                }];
+
                 [_item setListImageRowHandler:^(CPListImageRowItem * _Nonnull item, NSInteger index, dispatch_block_t  _Nonnull completionBlock) {
                     // Find the current template
                     RNCPStore *store = [RNCPStore sharedManager];
                     CPTemplate *template = [store findTemplateById:templateId];
+                    NSString *imageId = nil;
+
+                    id imageIdsObj = item.userInfo[@"imageIds"];
+                    if ([imageIdsObj isKindOfClass:[NSArray class]]) {
+                        NSArray *imageIds = (NSArray *)imageIdsObj;
+                        if (index < imageIds.count) {
+                            id candidate = imageIds[index];
+                            if ([candidate isKindOfClass:[NSString class]]) {
+                                imageId = candidate;
+                            }
+                        }
+                    }
+
+                    if (!imageId) {
+                        imageId = (NSString *)[NSNull null];
+                    }
+
                     if (template) {
-                        [self sendTemplateEventWithName:template name:@"didSelectListItemRowImage" json:@{ @"index": @(listIndex), @"imageIndex": @(index)}];
+                        NSMutableDictionary *payload = [@{
+                            @"index": @(listIndex),
+                            @"imageIndex": @(index),
+                            @"itemId": item.userInfo[@"itemId"],
+                        } mutableCopy];
+
+                        if (![imageId isKindOfClass:[NSNull class]]) {
+                            payload[@"imageId"] = imageId;
+                        }
+
+                        [self sendTemplateEventWithName:template
+                            name:@"didSelectListItemRowImage"
+                            json:payload];
                     }
                 }];
 
-                [_item setUserInfo:@{ @"index": @(listIndex) }];
-                [_items addObject:_item];
+                _item.handler = ^(CPListItem *selectedItem, void (^completionHandler)(void)) {
+                    NSDictionary *payload = @{
+                      @"templateId": templateId,
+                      @"index": selectedItem.userInfo[@"index"],
+                      @"itemId": selectedItem.userInfo[@"itemId"]
+                    };
+
+                    if (self->hasListeners) {
+                      [self sendEventWithName:@"didSelectListItem" body:payload];
+                    }
+
+                    self.selectedResultBlock = completionHandler;
+                };
+                if (_item) {
+                  [_items addObject:_item];
+                } else {
+                  NSLog(@"The image row item could not be created: %@", item);
+                }
             }
 
         }
@@ -1433,10 +1523,28 @@ RCT_EXPORT_METHOD(updateMapTemplateMapButtons:(NSString*) templateId mapButtons:
     [self sendTemplateEventWithName:template name:name json:@{}];
 }
 
-- (void)sendTemplateEventWithName:(CPTemplate *)template name:(NSString*)name json:(NSDictionary*)json {
-    NSMutableDictionary *body = [[NSMutableDictionary alloc] initWithDictionary:json];
-    NSDictionary *userInfo = [template userInfo];
-    [body setObject:[userInfo objectForKey:@"templateId"] forKey:@"templateId"];
+- (void)sendTemplateEventWithName:(CPTemplate *)template name:(NSString *)name json:(NSDictionary *)json {
+    NSMutableDictionary *body = [[NSMutableDictionary alloc] initWithDictionary:json ?: @{}];
+
+    NSString *templateId = nil;
+    NSDictionary *userInfo = nil;
+
+    if ([template respondsToSelector:@selector(userInfo)]) {
+        userInfo = [template userInfo];
+    }
+
+    if ([userInfo isKindOfClass:[NSDictionary class]]) {
+        id value = userInfo[@"templateId"];
+        if ([value isKindOfClass:[NSString class]]) {
+            templateId = (NSString *)value;
+        }
+    }
+
+    if (templateId.length > 0) {
+        body[@"templateId"] = templateId;
+    }
+    body[@"templateId"] = templateId ?: @"";
+
     if (hasListeners) {
         [self sendEventWithName:name body:body];
     }
@@ -1536,14 +1644,6 @@ RCT_EXPORT_METHOD(updateMapTemplateMapButtons:(NSString*) templateId mapButtons:
 - (void)searchTemplate:(CPSearchTemplate *)searchTemplate updatedSearchText:(NSString *)searchText completionHandler:(void (^)(NSArray<CPListItem *> * _Nonnull))completionHandler {
     [self sendTemplateEventWithName:searchTemplate name:@"updatedSearchText" json:@{ @"searchText": searchText }];
     self.searchResultBlock = completionHandler;
-}
-
-# pragma ListTemplate
-
-- (void)listTemplate:(CPListTemplate *)listTemplate didSelectListItem:(CPListItem *)item completionHandler:(void (^)(void))completionHandler {
-    NSNumber* index = [item.userInfo objectForKey:@"index"];
-    [self sendTemplateEventWithName:listTemplate name:@"didSelectListItem" json:@{ @"index": index }];
-    self.selectedResultBlock = completionHandler;
 }
 
 # pragma TabBarTemplate

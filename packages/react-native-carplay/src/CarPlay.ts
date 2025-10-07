@@ -158,14 +158,53 @@ export class CarPlayInterface {
    */
   public emitter = new NativeEventEmitter(RNCarPlay);
 
+  public selectListItemListenerMap = new Map<
+    string,
+    (e: { templateId: string; index: number; itemId?: string }) => void
+  >();
+  public selectListItemRowImageListenerMap = new Map<
+    string,
+    (e: {
+      templateId: string;
+      index: number;
+      itemId?: string;
+      imageIndex: number;
+      imageId?: string;
+    }) => void
+  >();
+
   private onConnectCallbacks = new Set<OnConnectCallback>();
   private onDisconnectCallbacks = new Set<OnDisconnectCallback>();
 
   constructor() {
     this.emitter.addListener('didConnect', (window: WindowInformation) => {
-      console.log('we are connected yes!');
+      console.log('Carplay Connected');
       this.connected = true;
       this.window = window;
+      this.emitter.addListener(
+        'didSelectListItem',
+        (e: { templateId: string; index: number; itemId?: string }) => {
+          const templateListener = this.selectListItemListenerMap.get(e.templateId);
+          if (templateListener) {
+            templateListener(e);
+          }
+        },
+      );
+      this.emitter.addListener(
+        'didSelectListItemRowImage',
+        (e: {
+          templateId: string;
+          index: number;
+          itemId?: string;
+          imageIndex: number;
+          imageId?: string;
+        }) => {
+          const templateListener = this.selectListItemRowImageListenerMap.get(e.templateId);
+          if (templateListener) {
+            templateListener(e);
+          }
+        },
+      );
       this.onConnectCallbacks.forEach(callback => {
         callback(window);
       });
@@ -173,6 +212,8 @@ export class CarPlayInterface {
     this.emitter.addListener('didDisconnect', () => {
       this.connected = false;
       this.window = undefined;
+      this.emitter.removeAllListeners('didSelectListItem');
+      this.emitter.removeAllListeners('didSelectListItemRowImage');
       this.onDisconnectCallbacks.forEach(callback => {
         callback();
       });
