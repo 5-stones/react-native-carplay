@@ -173,7 +173,9 @@ RCT_EXPORT_MODULE();
         if (data) {
             UIImage *image = [UIImage imageWithData:data];
             dispatch_async(dispatch_get_main_queue(), ^{
-                [item setImage:image];
+                if(image) {
+                  [item setImage:image];
+                }
             });
         } else {
             NSLog(@"Failed to load image from URL: %@", imgUrl);
@@ -193,7 +195,9 @@ RCT_EXPORT_MODULE();
                 NSMutableArray* newImages = [item.gridImages mutableCopy];
 
                 @try {
-                    newImages[index] = image;
+                    if(image) {
+                      newImages[index] = image;
+                    }
                 }
                 @catch (NSException *exception) {
                     // Best effort updating the array
@@ -293,7 +297,7 @@ RCT_EXPORT_METHOD(createTemplate:(NSString *)templateId config:(NSDictionary*)co
         if (![RCTConvert BOOL:config[@"backButtonHidden"]]) {
             if (@available(iOS 14.0, *)) {
                 CPBarButton *backButton = [[CPBarButton alloc] initWithTitle:@" Back" handler:^(CPBarButton * _Nonnull barButton) {
-                    if (hasListeners) {
+                    if (self->hasListeners) {
                         [self sendEventWithName:@"backButtonPressed" body:@{@"templateId":templateId}];
                     }
                     [self popTemplate:false];
@@ -676,9 +680,11 @@ RCT_EXPORT_METHOD(updateListTemplateSections:(NSString *)templateId sections:(NS
     CPTemplate *template = [store findTemplateById:templateId];
     if (template) {
         CPListTemplate *listTemplate = (CPListTemplate*) template;
-        [listTemplate updateSections:[self parseSections:sections templateId:templateId]];
+        NSArray *parsedSections = [self parseSections:sections templateId:templateId];
+
+        [listTemplate updateSections:parsedSections];
     } else {
-        NSLog(@"Failed to find template %@", template);
+        NSLog(@"Failed to find template %@", templateId);
     }
 }
 
@@ -1243,7 +1249,9 @@ RCT_EXPORT_METHOD(updateMapTemplateMapButtons:(NSString*) templateId mapButtons:
 
                 for (NSObject *imageObj in slicedArray){
                     UIImage *_image = [RCTConvert UIImage:imageObj];
-                    [_images addObject:_image];
+                    if (_image) {
+                      [_images addObject:_image];
+                    }
                 }
             }
             if (@available(iOS 14.0, *)) {

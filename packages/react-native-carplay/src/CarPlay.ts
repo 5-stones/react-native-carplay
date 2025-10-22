@@ -86,6 +86,7 @@ export interface InternalCarPlay extends NativeModule {
   getMaximumListImageRowItemImageSize(id: string): Promise<ImageSize>;
   getTopTemplateId(): Promise<string>;
   reactToSelectedResult(status: boolean): void;
+  updateListTemplate(id: string, config: unknown): void;
   updateListTemplateSections(id: string, config: unknown): void;
   updateListTemplateItem(id: string, config: unknown): void;
   updateListItemById(itemId: string, config: unknown): void;
