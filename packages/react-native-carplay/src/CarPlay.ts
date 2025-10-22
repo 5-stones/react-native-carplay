@@ -33,6 +33,7 @@ import { RoutePreviewNavigationTemplate } from './templates/android/RoutePreview
 
 export interface InternalCarPlay extends NativeModule {
   checkForConnection(): void;
+  getConnectionStatus(): Promise<{carplay: boolean, phone: boolean}>;
   setRootTemplate(templateId: string, animated: boolean): void;
   pushTemplate(templateId: string, animated: boolean): void;
   popToTemplate(templateId: string, animated: boolean): void;

@@ -216,6 +216,36 @@ RCT_EXPORT_METHOD(checkForConnection) {
     }
 }
 
+RCT_REMAP_METHOD(getConnectionStatus,
+                 resolver:(RCTPromiseResolveBlock)resolve
+                 rejecter:(RCTPromiseRejectBlock)reject)
+{
+  // Check for CarPlay scene
+  BOOL carplayConnected = NO;
+  for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {
+    if ([scene isKindOfClass:[CPTemplateApplicationScene class]]) {
+      carplayConnected = YES;
+      break;
+    }
+  }
+
+  // Check for phone (active foreground window scene)
+  BOOL phoneConnected = NO;
+  for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {
+    if ([scene isKindOfClass:[UIWindowScene class]] &&
+        scene.activationState == UISceneActivationStateForegroundActive) {
+      phoneConnected = YES;
+      break;
+    }
+  }
+
+  resolve(@{
+    @"carplay": @(carplayConnected),
+    @"phone": @(phoneConnected)
+  });
+}
+
+
 RCT_EXPORT_METHOD(createTemplate:(NSString *)templateId config:(NSDictionary*)config callback:(id)callback) {
     // Get the shared instance of the RNCPStore class
     RNCPStore *store = [RNCPStore sharedManager];
