@@ -1,6 +1,6 @@
 {
-  "name": "react-native-carplay",
-  "version": "2.4.1-beta.0",
+  "name": "@5-stones/react-native-carplay",
+  "version": "2.5.0",
   "description": "CarPlay for React Native",
   "main": "lib/index.js",
   "react-native": "src/index.ts",
@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/birkir/react-native-carplay.git"
+    "url": "git+https://github.com/5-stones/react-native-carplay.git"
   },
   "keywords": [
     "react",
@@ -32,12 +32,12 @@
     "car",
     "auto"
   ],
-  "author": "Birkir Gudjonsson <birkir.gudjonsson@gmail.com>",
+  "author": "Matt Rice <mrice@weare5stones.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/birkir/react-native-carplay/issues"
+    "url": "https://github.com/5-stones/react-native-carplay/issues"
   },
-  "homepage": "https://github.com/birkir/react-native-carplay#readme",
+  "homepage": "https://github.com/5-stones/react-native-carplay#readme",
   "peerDependencies": {
     "react": "^17.0.2 || ^18.0.0",
     "react-native": "^0.60.0"
