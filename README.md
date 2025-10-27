@@ -139,7 +139,7 @@ To run the example app:
 
 ```bash
 # Clone the repository
-git clone https://github.com/birkir/react-native-carplay.git
+git clone https://github.com/5-stones/react-native-carplay.git
 
 # Navigate to the example directory
 cd react-native-carplay/apps/example
